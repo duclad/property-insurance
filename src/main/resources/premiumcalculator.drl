@@ -1,0 +1,55 @@
+import com.duclad.insurance.premiumcalculator.model.PolicySubObject
+import java.math.BigDecimal
+
+global com.duclad.insurance.premiumcalculator.service.PremiumTotal premiumTotal
+
+dialect  "mvel"
+
+rule "Calculate premium using basic coefficient for fire risk"
+    when
+        $totalForFire : BigDecimal(this.compareTo(new BigDecimal("100"))<=0)
+                    from accumulate(
+                        PolicySubObject( riskType == "FIRE", $insured : insuredAmount ),
+                        sumBD($insured)
+                    )
+    then
+      	premiumTotal.add($totalForFire.multiply(new BigDecimal("0.014")))
+end
+
+
+rule "Calculate premium using increased coefficient for fire risk"
+    when
+        $totalForFire : BigDecimal(this.compareTo(new BigDecimal("100"))>0)
+                    from accumulate(
+                        PolicySubObject( riskType == "FIRE", $insured : insuredAmount ),
+                        sumBD($insured)
+                    )
+    then
+      	premiumTotal.add($totalForFire.multiply(new BigDecimal("0.024")))
+end
+
+
+rule "Calculate premium using basic coefficient for theft risk"
+    when
+        $totalForFire : BigDecimal(this.compareTo(new BigDecimal("15"))<=0)
+                    from accumulate(
+                        PolicySubObject( riskType == "THEFT", $insured : insuredAmount ),
+                        sumBD($insured)
+                    )
+    then
+      	premiumTotal.add($totalForFire.multiply(new BigDecimal("0.11")))
+end
+
+
+rule "Calculate premium using increased coefficient for theft risk"
+    when
+        $totalForFire : BigDecimal(this.compareTo(new BigDecimal("15"))>0)
+                    from accumulate(
+                        PolicySubObject( riskType == "THEFT", $insured : insuredAmount ),
+                        sumBD($insured)
+                    )
+    then
+      	premiumTotal.add($totalForFire.multiply(new BigDecimal("0.05")))
+end
+
+
